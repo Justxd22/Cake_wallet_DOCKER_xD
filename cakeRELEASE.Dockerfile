@@ -11,7 +11,14 @@ FROM instrumentisto/flutter:3.19.6
 
 # Set environment variables
 ENV STORE_PASS=test@cake_wallet \
-    KEY_PASS=test@cake_wallet
+    KEY_PASS=test@cake_wallet \
+    ANDROID_ROOT=/usr/local/lib/android \
+    ANDROID_SDK_ROOT=/usr/local/lib/android/sdk \
+    ANDROID_HOME=/usr/local/lib/android/sdk \
+    ANDROID_NDK_HOME=/usr/local/lib/android/sdk/ndk/27.1.12297006 \
+    ANDROID_NDK_ROOT=/usr/local/lib/android/sdk/ndk/27.1.12297006 \
+    ANDROID_NDK=/usr/local/lib/android/sdk/ndk/27.1.12297006 \
+    PATH=$PATH:/usr/local/lib/android/sdk/cmdline-tools/latest/bin:/usr/local/lib/android/sdk/platform-tools
 
 SHELL ["/bin/bash", "-c"]
 
@@ -32,6 +39,23 @@ RUN apt update && \
     openjdk-8-jre-headless \
     clang
 
+
+# Install Android SDK components
+RUN rm -rf /opt/android-sdk-linux && \
+    mkdir -p $ANDROID_SDK_ROOT/cmdline-tools && \
+    curl -o commandlinetools.zip -L https://dl.google.com/android/repository/commandlinetools-linux-9123335_latest.zip && \
+    unzip -qq commandlinetools.zip -d $ANDROID_SDK_ROOT/cmdline-tools && \
+    mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest && \
+    rm commandlinetools.zip && \
+    yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses && \
+    $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+        "platform-tools" \
+        "platforms;android-30" \
+        "build-tools;30.0.3" \
+        "ndk;27.1.12297006" && \
+    chmod -R a+rwx $ANDROID_SDK_ROOT
+
+
 # Set up Android environment
 RUN mkdir -p /opt/android && \
     cd /opt/android && \
@@ -45,27 +69,28 @@ RUN mkdir -p /opt/android && \
     chmod +x pubspec_gen.sh && \
     ./app_config.sh
 
-# Install Go
+    
+# Build mwebd
 RUN wget https://go.dev/dl/go1.23.1.linux-amd64.tar.gz && \
     rm -rf /usr/local/go && \
     tar -C /usr/local -xzf go1.23.1.linux-amd64.tar.gz && \
     export PATH=$PATH:/usr/local/go/bin && \
     go install golang.org/x/mobile/cmd/gomobile@latest && \
     export PATH=$PATH:~/go/bin && \
-    gomobile init
+    gomobile init && \
+    cd /opt/android/cake_wallet/scripts/android/ && \
+    ./build_mwebd.sh --dont-install
+
 
 # Build binaries (this step may take a while)
 RUN cd /opt/android/cake_wallet/scripts/android/ && \
-    source ./app_env.sh cakewallet && \
-    ./build_monero_all.sh
+    bash -c "set -x && source ./app_env.sh cakewallet && \
+    echo 'BUILDING BINS:' && \
+    ./build_monero_all.sh" 
 
 # Fetch Flutter dependencies
 RUN cd /opt/android/cake_wallet && \
     flutter pub get
-
-# Build mwebd
-RUN cd /opt/android/cake_wallet/scripts/android/ && \
-    ./build_mwebd.sh --dont-install
 
 # keystore
 RUN cd /opt/android/cake_wallet/android/app && \

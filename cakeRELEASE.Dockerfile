@@ -29,13 +29,20 @@ RUN apt update && \
     unzip \
     automake \
     build-essential \
+    autoconf \
     file \
     pkg-config \
     git \
     python-is-python3 \
     libtool \
     libtinfo5 \
+    make \
+    gcc \
+    g++ \
+    lbzip2 \
     cmake \
+    ccache \
+    gperf \
     openjdk-8-jre-headless \
     clang
 
@@ -67,7 +74,10 @@ RUN mkdir -p /opt/android && \
     ./install_ndk.sh && \
     source ./app_env.sh cakewallet && \
     chmod +x pubspec_gen.sh && \
-    ./app_config.sh
+    ./app_config.sh && \
+    git config --global --add safe.directory '*' && \
+    git config --global user.email "test@caketest.com" && \
+    git config --global user.name "Docker Build Test"
 
     
 # Build mwebd

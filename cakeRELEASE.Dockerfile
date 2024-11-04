@@ -91,16 +91,19 @@ RUN wget https://go.dev/dl/go1.23.1.linux-amd64.tar.gz && \
     cd /opt/android/cake_wallet/scripts/android/ && \
     ./build_mwebd.sh --dont-install
 
-
-# Build binaries (this step may take a while)
-RUN cd /opt/android/cake_wallet/scripts/android/ && \
-    bash -c "set -x && source ./app_env.sh cakewallet && \
-    echo 'BUILDING BINS:' && \
-    ./build_monero_all.sh" 
-
 # Fetch Flutter dependencies
 RUN cd /opt/android/cake_wallet && \
     flutter pub get
+
+# download pre-Built binaries
+RUN cd /opt/android/cake_wallet && \
+    flutter packages pub run tool/download_moneroc_prebuilds.dart
+
+# Build binaries (this step may take a while)
+# RUN cd /opt/android/cake_wallet/scripts/android/ && \
+#     bash -c "set -x && source ./app_env.sh cakewallet && \
+#     echo 'BUILDING BINS:' && \
+#     ./build_monero_all.sh" 
 
 # keystore
 RUN cd /opt/android/cake_wallet/android/app && \
@@ -115,72 +118,73 @@ RUN cd /opt/android/cake_wallet && \
 
 # Localization
 RUN cd /opt/android/cake_wallet && \
-    flutter packages pub run tool/generate_localization.dart
+    flutter packages pub run tool/generate_localization.dart && \
+    flutter packages pub run tool/generate_new_secrets.dart
+
+# ---- Add Secrets with Placeholders ----
+# RUN cd /opt/android/cake_wallet && \
+#     touch lib/.secrets.g.dart && \
+#     touch cw_evm/lib/.secrets.g.dart && \
+#     touch cw_solana/lib/.secrets.g.dart && \
+#     touch cw_core/lib/.secrets.g.dart && \
+#     touch cw_nano/lib/.secrets.g.dart && \
+#     touch cw_tron/lib/.secrets.g.dart && \
+#     echo "const salt = '00000000000000000000000000000000';" > lib/.secrets.g.dart && \
+#     echo "const keychainSalt = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const key = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const walletSalt = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const shortKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const backupSalt = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const backupKeychainSalt = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const changeNowApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const changeNowApiKeyDesktop = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const wyreSecretKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const wyreApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const wyreAccountId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const moonPayApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const moonPaySecretKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const sideShiftAffiliateId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const simpleSwapApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const simpleSwapApiKeyDesktop = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const onramperApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const anypayToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const ioniaClientId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const twitterBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const trocadorApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const trocadorExchangeMarkup = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const anonPayReferralCode = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const fiatApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const payfuraApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const ankrApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const etherScanApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const polygonScanApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const etherScanApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
+#     echo "const moralisApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
+#     echo "const chatwootWebsiteToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const exolixApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const robinhoodApplicationId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const exchangeHelperApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const walletConnectProjectId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const moralisApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const polygonScanApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
+#     echo "const ankrApiKey = '00000000000000000000000000000000';" >> cw_solana/lib/.secrets.g.dart && \
+#     echo "const testCakePayApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const cakePayApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const authorization = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const CSRFToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const quantexExchangeMarkup = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const nano2ApiKey = '00000000000000000000000000000000';" >> cw_nano/lib/.secrets.g.dart && \
+#     echo "const nanoNowNodesApiKey = '00000000000000000000000000000000';" >> cw_nano/lib/.secrets.g.dart && \
+#     echo "const tronGridApiKey = '00000000000000000000000000000000';" >> cw_tron/lib/.secrets.g.dart && \
+#     echo "const tronNowNodesApiKey = '00000000000000000000000000000000';" >> cw_tron/lib/.secrets.g.dart && \
+#     echo "const letsExchangeBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const letsExchangeAffiliateId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const stealthExBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
+#     echo "const stealthExAdditionalFeePercent = '00000000000000000000000000000000';" >> lib/.secrets.g.dart
 
 # Final build step
 RUN cd /opt/android/cake_wallet && \
     ./model_generator.sh
-
-# ---- Add Secrets with Placeholders ----
-RUN cd /opt/android/cake_wallet && \
-    touch lib/.secrets.g.dart && \
-    touch cw_evm/lib/.secrets.g.dart && \
-    touch cw_solana/lib/.secrets.g.dart && \
-    touch cw_core/lib/.secrets.g.dart && \
-    touch cw_nano/lib/.secrets.g.dart && \
-    touch cw_tron/lib/.secrets.g.dart && \
-    echo "const salt = '00000000000000000000000000000000';" > lib/.secrets.g.dart && \
-    echo "const keychainSalt = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const key = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const walletSalt = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const shortKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const backupSalt = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const backupKeychainSalt = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const changeNowApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const changeNowApiKeyDesktop = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const wyreSecretKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const wyreApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const wyreAccountId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const moonPayApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const moonPaySecretKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const sideShiftAffiliateId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const simpleSwapApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const simpleSwapApiKeyDesktop = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const onramperApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const anypayToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const ioniaClientId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const twitterBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const trocadorApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const trocadorExchangeMarkup = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const anonPayReferralCode = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const fiatApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const payfuraApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const ankrApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const etherScanApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const polygonScanApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const etherScanApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
-    echo "const moralisApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
-    echo "const chatwootWebsiteToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const exolixApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const robinhoodApplicationId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const exchangeHelperApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const walletConnectProjectId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const moralisApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const polygonScanApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
-    echo "const ankrApiKey = '00000000000000000000000000000000';" >> cw_solana/lib/.secrets.g.dart && \
-    echo "const testCakePayApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const cakePayApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const authorization = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const CSRFToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const quantexExchangeMarkup = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const nano2ApiKey = '00000000000000000000000000000000';" >> cw_nano/lib/.secrets.g.dart && \
-    echo "const nanoNowNodesApiKey = '00000000000000000000000000000000';" >> cw_nano/lib/.secrets.g.dart && \
-    echo "const tronGridApiKey = '00000000000000000000000000000000';" >> cw_tron/lib/.secrets.g.dart && \
-    echo "const tronNowNodesApiKey = '00000000000000000000000000000000';" >> cw_tron/lib/.secrets.g.dart && \
-    echo "const letsExchangeBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const letsExchangeAffiliateId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const stealthExBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
-    echo "const stealthExAdditionalFeePercent = '00000000000000000000000000000000';" >> lib/.secrets.g.dart
 
 # Build APK
 RUN cd /opt/android/cake_wallet && \

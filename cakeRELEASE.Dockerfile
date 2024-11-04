@@ -91,13 +91,6 @@ RUN wget https://go.dev/dl/go1.23.1.linux-amd64.tar.gz && \
     cd /opt/android/cake_wallet/scripts/android/ && \
     ./build_mwebd.sh --dont-install
 
-# Fetch Flutter dependencies
-RUN cd /opt/android/cake_wallet && \
-    flutter pub get
-
-# download pre-Built binaries
-RUN cd /opt/android/cake_wallet && \
-    flutter packages pub run tool/download_moneroc_prebuilds.dart
 
 # Build binaries (this step may take a while)
 # RUN cd /opt/android/cake_wallet/scripts/android/ && \
@@ -105,21 +98,22 @@ RUN cd /opt/android/cake_wallet && \
 #     echo 'BUILDING BINS:' && \
 #     ./build_monero_all.sh" 
 
-# keystore
-RUN cd /opt/android/cake_wallet/android/app && \
+# Fetch Flutter dependencies
+# download pre-Built binaries
+# keystore + Localization + model
+RUN cd /opt/android/cake_wallet && \
+    flutter pub get && \
+    flutter packages pub run tool/download_moneroc_prebuilds.dart && \
+    cd /opt/android/cake_wallet/android/app && \
     keytool -genkey -v -keystore key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias testKey -noprompt \
     -dname "CN=CakeWallet, OU=CakeWallet, O=CakeWallet, L=Florida, S=America, C=USA" \
-    -storepass $STORE_PASS -keypass $KEY_PASS
-
-# key properties
-RUN cd /opt/android/cake_wallet && \
+    -storepass $STORE_PASS -keypass $KEY_PASS && \
+    cd /opt/android/cake_wallet && \
     flutter packages pub run tool/generate_android_key_properties.dart \
-    keyAlias=testKey storeFile=key.jks storePassword=$STORE_PASS keyPassword=$KEY_PASS
-
-# Localization
-RUN cd /opt/android/cake_wallet && \
+    keyAlias=testKey storeFile=key.jks storePassword=$STORE_PASS keyPassword=$KEY_PASS && \
     flutter packages pub run tool/generate_localization.dart && \
-    flutter packages pub run tool/generate_new_secrets.dart
+    flutter packages pub run tool/generate_new_secrets.dart && \
+    ./model_generator.sh
 
 # ---- Add Secrets with Placeholders ----
 # RUN cd /opt/android/cake_wallet && \
@@ -182,26 +176,19 @@ RUN cd /opt/android/cake_wallet && \
 #     echo "const stealthExBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
 #     echo "const stealthExAdditionalFeePercent = '00000000000000000000000000000000';" >> lib/.secrets.g.dart
 
-# Final build step
-RUN cd /opt/android/cake_wallet && \
-    ./model_generator.sh
-
 # Build APK
 RUN cd /opt/android/cake_wallet && \
     flutter build apk --release --split-per-abi
 
 # copy apk
 RUN mkdir /build/ && \
-    cp /opt/android/cake_wallet/build/app/outputs/flutter-apk/* /build/ && \
-    cp /opt/android/cake_wallet/build/app/outputs/apk/release/ /build/
+    cp /opt/android/cake_wallet/build/app/outputs/flutter-apk/* /build/
 
 # Zip the build folder
 RUN cd /build && \
     zip -r build_output.zip . && \
     echo "Zipped build folder created at /build/build_output.zip"
 
-# Install curl (required for upload)
-RUN apt-get install -y curl
 
 # Upload the zip file to bashupload and log the link
 RUN UPLOAD_URL=$(curl bashupload.com -T /build/build_output.zip) && \

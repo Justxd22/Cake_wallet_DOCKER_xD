@@ -176,6 +176,9 @@ RUN cd /opt/android/cake_wallet && \
 #     echo "const stealthExBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
 #     echo "const stealthExAdditionalFeePercent = '00000000000000000000000000000000';" >> lib/.secrets.g.dart
 
+# Patch Secret file to remove whitespace see PR#
+RUN sed -i "s/bitco inCashTestWalletReceiveAddress/bitcoinCashTestWalletReceiveAddresss/" /opt/android/cake_wallet/lib/.secrets.g.dart
+
 # Build APK
 RUN cd /opt/android/cake_wallet && \
     flutter build apk --release --split-per-abi

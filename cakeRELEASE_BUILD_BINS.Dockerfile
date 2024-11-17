@@ -93,17 +93,16 @@ RUN wget https://go.dev/dl/go1.23.1.linux-amd64.tar.gz && \
 
 
 # Build binaries (this step may take a while)
-# RUN cd /opt/android/cake_wallet/scripts/android/ && \
-#     bash -c "set -x && source ./app_env.sh cakewallet && \
-#     echo 'BUILDING BINS:' && \
-#     ./build_monero_all.sh" 
+RUN cd /opt/android/cake_wallet/scripts/android/ && \
+    bash -c "set -x && source ./app_env.sh cakewallet && \
+    echo 'BUILDING BINS:' && \
+    ./build_monero_all.sh" 
 
 # Fetch Flutter dependencies
 # download pre-Built binaries
 # keystore + Localization + model
 RUN cd /opt/android/cake_wallet && \
     flutter pub get && \
-    flutter packages pub run tool/download_moneroc_prebuilds.dart && \
     cd /opt/android/cake_wallet/android/app && \
     keytool -genkey -v -keystore key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias testKey -noprompt \
     -dname "CN=CakeWallet, OU=CakeWallet, O=CakeWallet, L=Florida, S=America, C=USA" \

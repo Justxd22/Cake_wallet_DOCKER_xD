@@ -7,7 +7,7 @@
 
 
 # Base image with Flutter
-FROM instrumentisto/flutter:3.19.6
+FROM instrumentisto/flutter:3.24.0
 
 # Set environment variables
 ENV STORE_PASS=test@cake_wallet \
@@ -35,7 +35,7 @@ RUN apt update && \
     git \
     python-is-python3 \
     libtool \
-    libtinfo5 \
+    libtinfo6 \
     make \
     gcc \
     g++ \
@@ -108,10 +108,10 @@ RUN cd /opt/android/cake_wallet && \
     -dname "CN=CakeWallet, OU=CakeWallet, O=CakeWallet, L=Florida, S=America, C=USA" \
     -storepass $STORE_PASS -keypass $KEY_PASS && \
     cd /opt/android/cake_wallet && \
-    flutter packages pub run tool/generate_android_key_properties.dart \
+    dart run tool/generate_android_key_properties.dart \
     keyAlias=testKey storeFile=key.jks storePassword=$STORE_PASS keyPassword=$KEY_PASS && \
-    flutter packages pub run tool/generate_localization.dart && \
-    flutter packages pub run tool/generate_new_secrets.dart && \
+    dart run tool/generate_localization.dart && \
+    dart run tool/generate_new_secrets.dart && \
     ./model_generator.sh
 
 # ---- Add Secrets with Placeholders ----
@@ -153,6 +153,7 @@ RUN cd /opt/android/cake_wallet && \
 #     echo "const polygonScanApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
 #     echo "const etherScanApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
 #     echo "const moralisApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
+#     echo "const nowNodesApiKey = '00000000000000000000000000000000';" >> cw_evm/lib/.secrets.g.dart && \
 #     echo "const chatwootWebsiteToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
 #     echo "const exolixApiKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
 #     echo "const robinhoodApplicationId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
@@ -170,6 +171,7 @@ RUN cd /opt/android/cake_wallet && \
 #     echo "const nanoNowNodesApiKey = '00000000000000000000000000000000';" >> cw_nano/lib/.secrets.g.dart && \
 #     echo "const tronGridApiKey = '00000000000000000000000000000000';" >> cw_tron/lib/.secrets.g.dart && \
 #     echo "const tronNowNodesApiKey = '00000000000000000000000000000000';" >> cw_tron/lib/.secrets.g.dart && \
+#     echo "const meldTestPublicKey = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
 #     echo "const letsExchangeBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
 #     echo "const letsExchangeAffiliateId = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
 #     echo "const stealthExBearerToken = '00000000000000000000000000000000';" >> lib/.secrets.g.dart && \
